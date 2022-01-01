@@ -1,0 +1,100 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2019,
+    "sourceType": "module"
+  },
+  "extends": [
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "prettier"
+  ],
+  "plugins": [
+    "@typescript-eslint",
+    "prettier"
+  ],
+  "rules": {
+    "prettier/prettier": [
+      "error"
+    ],
+    "getter-return": "warn",
+    "no-console": "warn",
+    "no-debugger": "warn",
+    "no-await-in-loop": "warn",
+    "no-duplicate-case": "warn",
+    "no-duplicate-imports": "off",
+    "no-empty": "warn",
+    "no-unreachable": "warn",
+    "no-func-assign": "warn",
+    "require-await": "warn",
+    "valid-typeof": "warn",
+    "no-unexpected-multiline": "warn",
+    "array-callback-return": "warn",
+    "block-scoped-var": "warn",
+    "class-methods-use-this": "off",
+    "complexity": "warn",
+    "default-case": "warn",
+    "eqeqeq": "off",
+    "no-alert": "error",
+    "no-eq-null": "off",
+    "no-empty-function": [
+      "error",
+      {
+        "allow": [
+          "constructors"
+        ]
+      }
+    ],
+    "no-empty-pattern": "warn",
+    "no-lone-blocks": "warn",
+    "no-loop-func": "warn",
+    "no-invalid-this": "warn",
+    "no-return-assign": "warn",
+    "no-warning-comments": "off",
+    "vars-on-top": "warn",
+    "no-return-await": "warn",
+    "no-param-reassign": "warn",
+    "init-declarations": "warn",
+    "no-restricted-globals": "warn",
+    "no-shadow": "warn",
+    "no-undef-init": "warn",
+    "no-unused-vars": "warn",
+    "no-use-before-define": "warn",
+    "callback-return": "warn",
+    "no-const-assign": "warn",
+    "no-class-assign": "warn",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-useless-constructor": "off",
+    "no-useless-rename": "warn",
+    "no-var": "warn",
+    "prefer-const": "warn",
+    "prefer-template": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-parameter-properties": "off",
+    "id-length": [
+      "warn",
+      {
+        "min": 3,
+        "max": 40,
+        "properties": "always",
+        "exceptions": [
+          "id",
+          "ID",
+          "Id",
+          "fs",
+          "os",
+          "i",
+          "ex",
+          "_"
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/*.ts"
+      ]
+    }
+  ]
+}

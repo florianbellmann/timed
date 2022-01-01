@@ -1,0 +1,36 @@
+{
+  "name": "timed",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/florianjuesten/timed.git",
+  "author": "Florian Jüsten <flojuesten@gmail.com>",
+  "license": "MIT",
+  "description": "terminal time tracker",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "inversify": "^6.0.1",
+    "reflect-metadata": "^0.1.13",
+    "terminal-kit": "2.3.0",
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/eslint": "^7.2.12",
+    "@types/node": "^17.0.5",
+    "@types/terminal-kit": "^1.28.2",
+    "@typescript-eslint/eslint-plugin": "^4.25.0",
+    "@typescript-eslint/parser": "4.25.0",
+    "eslint": "7.27.0",
+    "eslint-config-airbnb": "^18.1.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "3.4.0",
+    "husky": "^6.0.0",
+    "prettier": "^2.0.5",
+    "ts-node": "10.0.0",
+    "typescript": "^4.3.2"
+  },
+  "scripts": {
+    "start": "node dist/index.js",
+    "lint": "eslint -c ./.eslintrc.json src",
+    "prepare": "husky install"
+  }
+}
