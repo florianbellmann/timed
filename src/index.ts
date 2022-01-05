@@ -1,5 +1,7 @@
+import { IApp } from './app'
+import { container } from './dependency-injection/container'
+import { TYPES } from './dependency-injection/types'
 import { logger } from './logger'
-import { terminal } from 'terminal-kit'
 
 process.on('uncaughtException', function (err) {
   if (err) {
@@ -8,17 +10,13 @@ process.on('uncaughtException', function (err) {
   }
 })
 
-function main() {
+function bootstrap() {
   try {
-    terminal('Please enter your name: ')
-
-    terminal.inputField({ autoCompleteMenu: true }, function (error, input) {
-      terminal.green("\nYour name is '%s'\n", input)
-      process.exit()
-    })
+    const app = container.get<IApp>(TYPES.IApp)
+    app.main()
   } catch (error) {
     logger.error(error)
   }
 }
 
-main()
+bootstrap()
