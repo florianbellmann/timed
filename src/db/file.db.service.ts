@@ -22,6 +22,7 @@ export class FileDBService implements IDBService {
       return fs.readFileSync(this.filePath, 'utf8').split('\n')
     } catch (error) {
       logger.error(error)
+      return []
     }
   }
 
@@ -42,6 +43,11 @@ export class FileDBService implements IDBService {
 
   readLast50Entries(): string[] {
     const fileContents = this.readFromDB()
-    return fileContents.slice(-50)
+    try {
+      return fileContents.slice(-50)
+    } catch (error) {
+      logger.error(error)
+      return fileContents
+    }
   }
 }
