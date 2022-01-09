@@ -13,17 +13,28 @@ export class FileDBService implements IDBService {
       fs.writeFileSync(this.filePath, '')
     }
   }
-  setDBPath(filePath: string): void {
-    this.filePath = filePath
-  }
 
-  readFromDB(): string[] {
+  private readFromDB(): string[] {
     try {
       return fs.readFileSync(this.filePath, 'utf8').split('\n')
     } catch (error) {
       logger.error(error)
       return []
     }
+  }
+
+  getLastEntry(): string {
+    const fileContents = this.readFromDB()
+    try {
+      return fileContents[fileContents.length - 1]
+    } catch (error) {
+      logger.error(error)
+      return null
+    }
+  }
+
+  setDBPath(filePath: string): void {
+    this.filePath = filePath
   }
 
   appendEntry(entry: string): void {
@@ -41,10 +52,11 @@ export class FileDBService implements IDBService {
     }
   }
 
-  readLast50Entries(): string[] {
+  readLastEntries(n?: number): string[] {
+    const count = n || 10
     const fileContents = this.readFromDB()
     try {
-      return fileContents.slice(-50)
+      return fileContents.slice(-count)
     } catch (error) {
       logger.error(error)
       return fileContents

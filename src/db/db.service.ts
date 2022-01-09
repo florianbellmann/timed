@@ -1,6 +1,6 @@
 export interface IDBService {
-  readFromDB(): string[]
   appendEntry(entry: string): void
-  readLast50Entries(): string[]
+  readLastEntries(n?: number): string[]
   setDBPath(filePath: string): void
+  getLastEntry(): string
 }

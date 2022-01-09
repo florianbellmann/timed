@@ -12,25 +12,21 @@ export interface IApp {
 @injectable()
 export class App implements IApp {
   private _cli: Cli
-  private _dbService: IDBService
   private _entryParser: IEntryParser
 
-  private _loadedLastEntries: string[] = []
   private _parsedEntries: IEntry[] = []
   private _accumulatedOvertime: string
 
   constructor(@inject(TYPES.IDBService) dbService: IDBService, @inject(TYPES.ICli) cli: Cli, @inject(TYPES.IEntryParser) entryParser: EntryParser) {
     this._cli = cli
     this._entryParser = entryParser
-    this._dbService = dbService
 
     this.reloadLastEntries()
     this.loadAccumulatedOvertime()
   }
 
   reloadLastEntries(): void {
-    this._loadedLastEntries = this._dbService.readLast50Entries()
-    this._parsedEntries = this._entryParser.parseDBEntries(this._loadedLastEntries)
+    this._parsedEntries = this._entryParser.getDbEntries()
   }
 
   loadAccumulatedOvertime(): void {
@@ -58,21 +54,19 @@ export class App implements IApp {
     switch (currentCommand) {
       case 'a':
         const timeToAppend = await this._cli.readAppendTime()
-        const newAppendOnlyEntry = this._entryParser.newDBEntryFromTime(timeToAppend)
-        this._dbService.appendEntry(newAppendOnlyEntry)
+        this._entryParser.insertNewEntryFromTime(timeToAppend)
         break
       case 's':
         const timeToSubtract = await this._cli.readSubtractTime()
-        const newSubtractOnlyEntry = this._entryParser.newDBEntryFromTime(timeToSubtract)
-        this._dbService.appendEntry(newSubtractOnlyEntry)
+        this._entryParser.insertNewEntryFromTime(timeToSubtract)
         break
       case 'r':
         this.reloadLastEntries()
         break
       case 'n':
-        const newEntryString = await this._cli.readNewEntry()
-        const parsedEntry = this._entryParser.newDBEntryFromInput(newEntryString)
-        this._dbService.appendEntry(parsedEntry)
+        const newEntry = await this._cli.readNewEntry()
+        this._entryParser.insertNewEntryFromInput(newEntry)
+        this.reloadLastEntries()
         break
       // case 'R':
       //   await this.resetOvertime()

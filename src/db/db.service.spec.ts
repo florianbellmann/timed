@@ -20,7 +20,7 @@ test('DBService should exist and implement methods', () => {
   expect(SUT).toBeDefined()
   expect(SUT.readFromDB).toBeDefined()
   expect(SUT.appendEntry).toBeDefined()
-  expect(SUT.readLast50Entries).toBeDefined()
+  expect(SUT.readLastEntries).toBeDefined()
   expect(SUT.setDBPath).toBeDefined()
 })
 
@@ -54,7 +54,7 @@ test('Should read last 50 entries from db', () => {
     SUT.appendEntry(`TEST ENTRY ${i}`)
   }
 
-  const last50 = SUT.readLast50Entries()
+  const last50 = SUT.readLastEntries()
 
   expect(last50.length).toBe(50)
   expect(last50[0]).toBe('TEST ENTRY 50')
@@ -67,7 +67,7 @@ test('Should read less than 50 entries from db', () => {
     SUT.appendEntry(`TEST ENTRY ${i}`)
   }
 
-  const last50 = SUT.readLast50Entries()
+  const last50 = SUT.readLastEntries()
 
   expect(last50.length).toBe(30)
   expect(last50.length).toBeLessThan(50)
