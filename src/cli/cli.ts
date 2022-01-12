@@ -7,7 +7,9 @@ import { IEntryParser, EntryParser } from '../entry.parser/entry.parser'
 import { logger } from '../logger'
 
 export interface ICli {
+  // eslint-disable-next-line no-unused-vars
   displayLastEntries(entries: IEntry[]): void
+  // eslint-disable-next-line no-unused-vars
   displayAccumulatedOvertime(time: string): void
   displayUnknownCommand(): void
 
@@ -29,17 +31,15 @@ export class Cli implements ICli {
     const displayEntries = entries
       .filter((entry) => entry != null)
       .map((entry) => [this._entryParser.parseDateString(entry.date), entry.entryType, entry.entryTime, this._entryParser.parseOvertime(entry.overTime), entry.id])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(terminal as any).table(displayEntries, {
       hasBorder: true,
       contentHasMarkup: true,
       borderChars: 'lightRounded',
       borderAttr: { color: 'blue' },
       textAttr: { bgColor: 'default' },
-      // firstCellTextAttr: { bgColor: 'blue' },
-      // firstRowTextAttr: { bgColor: 'yellow' },
-      // firstColumnTextAttr: { bgColor: 'red' },
       width: 60,
-      fit: true // Activate all expand/shrink + wordWrap
+      fit: true
     })
   }
 
@@ -52,7 +52,6 @@ export class Cli implements ICli {
   }
 
   readCommand(): Promise<string> {
-    // TODO: color this
     terminal(`Commands: \n
     n: new entry \n
     r: refresh \n
@@ -93,22 +92,63 @@ export class Cli implements ICli {
     const entryType = (await terminal.singleLineMenu(availableTypes).promise).selectedText as EntryType
 
     terminal('Please enter the time (e.g. 1300): ')
-    const entryTime = (await terminal.inputField({}).promise) as any
+    const entryTime = await terminal.inputField({}).promise
 
     terminal('Please enter the day: ')
-    // TODO: today is missing
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    const entryDay = await terminal.singleLineMenu(days).promise
 
-    // TODO: get date from day. see date helper from other project
-    // TODO: wrong time zone
-    const entryDate = new Date().toISOString()
+    const days = ['Today', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    const entryDay = await (await terminal.singleLineMenu(days).promise).selectedText
+
+    const entryHours = parseInt(entryTime.substring(0, 2), 10)
+    const entryMinutes = parseInt(entryTime.substring(2, 4), 10)
+    let entryDate = new Date()
+    switch (entryDay) {
+      case 'Monday':
+        const prevMonday = new Date()
+        prevMonday.setDate(prevMonday.getDate() - ((prevMonday.getDay() + 6) % 7))
+        entryDate = prevMonday
+        break
+      case 'Tuesday':
+        const prevTuesday = new Date()
+        prevTuesday.setDate(prevTuesday.getDate() - ((prevTuesday.getDay() + 5) % 7))
+        entryDate = prevTuesday
+        break
+      case 'Wednesday':
+        const prevWednesday = new Date()
+        prevWednesday.setDate(prevWednesday.getDate() - ((prevWednesday.getDay() + 4) % 7))
+        entryDate = prevWednesday
+        break
+      case 'Thursday':
+        const prevThursday = new Date()
+        prevThursday.setDate(prevThursday.getDate() - ((prevThursday.getDay() + 3) % 7))
+        entryDate = prevThursday
+        break
+      case 'Friday':
+        const prevFriday = new Date()
+        prevFriday.setDate(prevFriday.getDate() - ((prevFriday.getDay() + 2) % 7))
+        entryDate = prevFriday
+        break
+      case 'Saturday':
+        const prevSaturday = new Date()
+        prevSaturday.setDate(prevSaturday.getDate() - ((prevSaturday.getDay() + 1) % 7))
+        entryDate = prevSaturday
+        break
+      case 'Sunday':
+        const prevSunday = new Date()
+        prevSunday.setDate(prevSunday.getDate() - (prevSunday.getDay() % 7))
+        entryDate = prevSunday
+        break
+
+      default:
+        break
+    }
+    entryDate.setHours(entryHours, entryMinutes, 0, 0)
 
     const id = randomUUID()
 
     return {
       id,
-      date: entryDate,
+      date: entryDate.toISOString(),
       entryTime,
       entryType
     }

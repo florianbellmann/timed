@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 export interface IDBService {
   appendEntry(entry: string): void
   readLastEntries(n?: number): string[]

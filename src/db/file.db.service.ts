@@ -52,6 +52,7 @@ export class FileDBService implements IDBService {
     }
   }
 
+  // eslint-disable-next-line id-length
   readLastEntries(n?: number): string[] {
     const count = n || 10
     const fileContents = this.readFromDB()

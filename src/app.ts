@@ -22,21 +22,10 @@ export class App implements IApp {
     this._entryParser = entryParser
 
     this.reloadLastEntries()
-    this.loadAccumulatedOvertime()
   }
 
   reloadLastEntries(): void {
     this._parsedEntries = this._entryParser.getDbEntries()
-  }
-
-  loadAccumulatedOvertime(): void {
-    // const allEntries = this._dbService.readFromDB()
-    // TODO: strip out overtimes
-    // TODO:maybe the formatting needs to happen in the entryparser! it uses the formatter then
-    // const overtimes = allEntries.filter((entry) => entry.includes('overtime'))
-    // throw new Error('Not implemented')
-    // TODO: format overtime
-    // this._accumulatedOvertime = this._timeFormatter.
   }
 
   displayLastEntries(): void {
@@ -58,7 +47,7 @@ export class App implements IApp {
         break
       case 's':
         const timeToSubtract = await this._cli.readSubtractTime()
-        this._entryParser.insertNewEntryFromTime(timeToSubtract)
+        this._entryParser.insertNewEntryFromTime(timeToSubtract * -1)
         break
       case 'r':
         this.reloadLastEntries()
