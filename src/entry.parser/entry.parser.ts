@@ -50,18 +50,23 @@ export class EntryParser implements IEntryParser {
   }
 
   getLastOvertime(): number {
-    return this.getLastEntry().overTime || 0
+    const lastEntry = this.getLastEntry()
+
+    if (lastEntry != null) return this.getLastEntry().overTime
+    else return 0
   }
 
   insertNewEntryFromTime(time: number): void {
     const id = randomUUID()
-    const date = Date.now
+    const date = new Date(Date.now())
+    date.setTime(date.getTime() - date.getTimezoneOffset() * 60 * 1000)
+
     const entryTime = time
     const entryType: EntryType = 'overtime'
 
     const overTime = this.getLastOvertime() + time
 
-    this._dbService.appendEntry(`${id};${date};${entryType};${entryTime};${overTime};`)
+    this._dbService.appendEntry(`${id};${date.toUTCString()};${entryType};${entryTime};${overTime};`)
   }
 
   private parseDBEntry(dbEntry: string): IEntry {
@@ -95,11 +100,43 @@ export class EntryParser implements IEntryParser {
   insertNewEntryFromInput(entry: IEntry): void {
     const { id, date, entryTime, entryType, overTime } = entry
 
-    let newOverTime = overTime
-    if (overTime == null) {
-      newOverTime = this.getLastOvertime()
-    }
+    const entryDate = new Date(date)
+    entryDate.setTime(entryDate.getTime() - entryDate.getTimezoneOffset() * 60 * 1000)
 
-    this._dbService.appendEntry(`${id};${date};${entryType};${entryTime};${newOverTime};`)
+    let newOverTime: number = overTime
+
+    if (entryType === 'end') {
+      const last10Entries = this.getDbEntries(10)
+
+      const endDate = new Date(date)
+      if (last10Entries.length > 0) {
+        for (let i = last10Entries.length - 1; i >= 0; i--) {
+          const lastEntry = last10Entries[i]
+          const lastDate = new Date(lastEntry.date)
+          const lastHours = parseInt(lastEntry.entryTime.substring(0, 2))
+          const lastMinutes = parseInt(lastEntry.entryTime.substring(3, 5))
+          const normalizedLastDate = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate(), lastHours, lastMinutes)
+          if (
+            lastEntry.entryType === 'start' &&
+            normalizedLastDate.getDate() === endDate.getDate() &&
+            normalizedLastDate.getMonth() === endDate.getMonth() &&
+            normalizedLastDate.getFullYear() === endDate.getFullYear()
+          ) {
+            console.log(lastEntry)
+
+            const hoursWorked = (endDate.getTime() - normalizedLastDate.getTime()) / (1000 * 60 * 60)
+            console.log(`hoursWorked`, hoursWorked)
+            newOverTime = lastEntry.overTime + parseInt(entryTime)
+            break
+          }
+        }
+      }
+
+      if (overTime == null) {
+        newOverTime = this.getLastOvertime()
+      }
+
+      this._dbService.appendEntry(`${id};${entryDate.toUTCString()};${entryType};${entryTime};${newOverTime};`)
+    }
   }
 }
