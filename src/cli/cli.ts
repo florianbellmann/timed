@@ -2,8 +2,8 @@ import { randomUUID } from 'crypto'
 import { inject, injectable } from 'inversify'
 import { terminal } from 'terminal-kit'
 import { TYPES } from '../dependency-injection/types'
-import { EntryType, IEntry } from '../entry.parser/entry'
-import { IEntryParser, EntryParser } from '../entry.parser/entry.parser'
+import { EntryType, IEntry } from '../business.layer/entry'
+import { IBusinessLayer, BusinessLayer } from '../business.layer/business.layer'
 import { logger } from '../logger'
 
 export interface ICli {
@@ -21,16 +21,16 @@ export interface ICli {
 
 @injectable()
 export class Cli implements ICli {
-  private _entryParser: IEntryParser
+  private _businessLayer: IBusinessLayer
 
-  constructor(@inject(TYPES.IEntryParser) entryParser: EntryParser) {
-    this._entryParser = entryParser
+  constructor(@inject(TYPES.IBusinessLayer) businessLayer: BusinessLayer) {
+    this._businessLayer = businessLayer
   }
 
   displayLastEntries(entries: IEntry[]): void {
     const displayEntries = entries
       .filter((entry) => entry != null)
-      .map((entry) => [this._entryParser.parseDateString(entry.date), entry.entryType, entry.entryTime, this._entryParser.parseOvertime(entry.overTime), entry.id])
+      .map((entry) => [this._businessLayer.parseDateString(entry.date), entry.entryType, entry.entryTime, this._businessLayer.parseOvertime(entry.overTime), entry.id])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(terminal as any).table(displayEntries, {
       hasBorder: true,

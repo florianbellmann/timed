@@ -2,8 +2,8 @@ import { inject, injectable } from 'inversify'
 import { Cli } from './cli/cli'
 import { IDBService } from './db/db.service'
 import { TYPES } from './dependency-injection/types'
-import { IEntry } from './entry.parser/entry'
-import { EntryParser, IEntryParser } from './entry.parser/entry.parser'
+import { IEntry } from './business.layer/entry'
+import { BusinessLayer, IBusinessLayer } from './business.layer/business.layer'
 
 export interface IApp {
   main(): Promise<void>
@@ -12,20 +12,20 @@ export interface IApp {
 @injectable()
 export class App implements IApp {
   private _cli: Cli
-  private _entryParser: IEntryParser
+  private _businessLayer: IBusinessLayer
 
   private _parsedEntries: IEntry[] = []
   private _accumulatedOvertime: string
 
-  constructor(@inject(TYPES.IDBService) dbService: IDBService, @inject(TYPES.ICli) cli: Cli, @inject(TYPES.IEntryParser) entryParser: EntryParser) {
+  constructor(@inject(TYPES.IDBService) dbService: IDBService, @inject(TYPES.ICli) cli: Cli, @inject(TYPES.IBusinessLayer) businessLayer: BusinessLayer) {
     this._cli = cli
-    this._entryParser = entryParser
+    this._businessLayer = businessLayer
 
     this.reloadLastEntries()
   }
 
   reloadLastEntries(): void {
-    this._parsedEntries = this._entryParser.getDbEntries()
+    this._parsedEntries = this._businessLayer.getDbEntries()
   }
 
   displayLastEntries(): void {
@@ -43,18 +43,18 @@ export class App implements IApp {
     switch (currentCommand) {
       case 'a':
         const timeToAppend = await this._cli.readAppendTime()
-        this._entryParser.insertNewEntryFromTime(timeToAppend)
+        this._businessLayer.insertNewEntryFromTime(timeToAppend)
         break
       case 's':
         const timeToSubtract = await this._cli.readSubtractTime()
-        this._entryParser.insertNewEntryFromTime(timeToSubtract * -1)
+        this._businessLayer.insertNewEntryFromTime(timeToSubtract * -1)
         break
       case 'r':
         this.reloadLastEntries()
         break
       case 'n':
         const newEntry = await this._cli.readNewEntry()
-        this._entryParser.insertNewEntryFromInput(newEntry)
+        this._businessLayer.insertNewEntryFromInput(newEntry)
         this.reloadLastEntries()
         break
       // case 'R':

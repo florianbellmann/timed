@@ -1,8 +1,8 @@
 // import { container } from '../dependency-injection/container'
 // import { TYPES } from '../dependency-injection/types'
-// import { IEntryParser } from './entry.parser'
+// import { IBusinessLayer } from './entry.parser'
 
-// const SUT = container.get<IEntryParser>(TYPES.IEntryParser)
+// const SUT = container.get<IBusinessLayer>(TYPES.IBusinessLayer)
 // test('Entry parser should exist', () => {
 //   expect(SUT).toBeDefined()
 

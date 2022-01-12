@@ -4,7 +4,7 @@ const TYPES = {
   ICli: Symbol.for('ICli'),
   ITimeKeeper: Symbol.for('ITimeKeeper'),
   ITimeFormatter: Symbol.for('ITimeFormatter'),
-  IEntryParser: Symbol.for('IEntryParser')
+  IBusinessLayer: Symbol.for('IBusinessLayer')
 }
 
 export { TYPES }

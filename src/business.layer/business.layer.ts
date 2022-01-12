@@ -5,7 +5,7 @@ import { TYPES } from '../dependency-injection/types'
 import { logger } from '../logger'
 import { IEntry, EntryType } from './entry'
 
-export interface IEntryParser {
+export interface IBusinessLayer {
   getDbEntries(n?: number): IEntry[]
   insertNewEntryFromInput(input: any): void
   insertNewEntryFromTime(time: number): void
@@ -19,7 +19,7 @@ export interface IEntryParser {
 }
 
 @injectable()
-export class EntryParser implements IEntryParser {
+export class BusinessLayer implements IBusinessLayer {
   private _dbService: IDBService
 
   constructor(@inject(TYPES.IDBService) dbService: IDBService) {
