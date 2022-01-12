@@ -13,7 +13,6 @@ export interface IBusinessLayer {
   getLastEntry(): IEntry
   getLastOvertime(): number
 
-  // TODO: these 2 are actually the only functions that can be in a parsed service. the rest is a business layer
   parseDateString(dateString: string): string
   parseOvertime(overTime: number): string
 }
