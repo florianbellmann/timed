@@ -30,7 +30,14 @@ export class Cli implements ICli {
   displayLastEntries(entries: IEntry[]): void {
     const displayEntries = entries
       .filter((entry) => entry != null)
-      .map((entry) => [this._businessLayer.parseDateString(entry.date), entry.entryType, entry.entryTime, this._businessLayer.parseOvertime(entry.overTime), entry.id])
+      .map((entry) => [
+        this._businessLayer.parseDateString(entry.date),
+        entry.entryTime,
+        this._businessLayer.parseOvertime(entry.workedTime),
+        this._businessLayer.parseOvertime(entry.overTime),
+        entry.entryType,
+        entry.id
+      ])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(terminal as any).table(displayEntries, {
       hasBorder: true,
@@ -92,15 +99,16 @@ export class Cli implements ICli {
     const entryType = (await terminal.singleLineMenu(availableTypes).promise).selectedText as EntryType
 
     terminal('Please enter the time (e.g. 1300): ')
-    const entryTime = await terminal.inputField({}).promise
+    let entryTime = await terminal.inputField({}).promise
+    if (entryTime.length === 3) {
+      entryTime = `0${entryTime}`
+    }
 
     terminal('Please enter the day: ')
 
     const days = ['Today', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     const entryDay = await (await terminal.singleLineMenu(days).promise).selectedText
 
-    const entryHours = parseInt(entryTime.substring(0, 2), 10)
-    const entryMinutes = parseInt(entryTime.substring(2, 4), 10)
     let entryDate = new Date()
     switch (entryDay) {
       case 'Monday':
@@ -142,7 +150,13 @@ export class Cli implements ICli {
       default:
         break
     }
-    entryDate.setHours(entryHours, entryMinutes, 0, 0)
+    try {
+      const entryHours = parseInt(entryTime.substring(0, 2), 10)
+      const entryMinutes = parseInt(entryTime.substring(2, 4), 10)
+      entryDate.setHours(entryHours, entryMinutes, 0, 0)
+    } catch (error) {
+      logger.error(error)
+    }
 
     const id = randomUUID()
 

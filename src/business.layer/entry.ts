@@ -4,5 +4,6 @@ export interface IEntry {
   date: string
   entryTime: string
   entryType: EntryType
+  workedTime?: number
   overTime?: number
 }
