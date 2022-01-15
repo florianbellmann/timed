@@ -2,14 +2,12 @@ import { randomUUID } from 'crypto'
 import { inject, injectable } from 'inversify'
 import { terminal } from 'terminal-kit'
 import { TYPES } from '../dependency-injection/types'
-import { EntryType, IEntry } from '../business.layer/entry'
-import { IBusinessLayer, BusinessLayer } from '../business.layer/business.layer'
+import { IEntry, EntryType } from '../entry.manager/entry'
+import { IEntryManager, EntryManager } from '../entry.manager/entry.manager'
 import { logger } from '../logger'
 
 export interface ICli {
-  // eslint-disable-next-line no-unused-vars
   displayLastEntries(entries: IEntry[]): void
-  // eslint-disable-next-line no-unused-vars
   displayAccumulatedOvertime(time: string): void
   displayUnknownCommand(): void
 
@@ -21,23 +19,25 @@ export interface ICli {
 
 @injectable()
 export class Cli implements ICli {
-  private _businessLayer: IBusinessLayer
+  private _entryManager: IEntryManager
 
-  constructor(@inject(TYPES.IBusinessLayer) businessLayer: BusinessLayer) {
-    this._businessLayer = businessLayer
+  constructor(@inject(TYPES.IEntryManager) entryManager: EntryManager) {
+    this._entryManager = entryManager
   }
 
   displayLastEntries(entries: IEntry[]): void {
     const displayEntries = entries
       .filter((entry) => entry != null)
       .map((entry) => [
-        this._businessLayer.parseDateString(entry.date),
+        this._entryManager.calculateWorkForEndDate(entry.date),
         entry.entryTime,
-        this._businessLayer.parseOvertime(entry.workedTime),
-        this._businessLayer.parseOvertime(entry.overTime),
+        this._entryManager.parseOvertime(entry.workedTime),
+        this._entryManager.parseOvertime(entry.overTime),
         entry.entryType,
         entry.id
       ])
+
+    // fix for broken terminal-kit types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(terminal as any).table(displayEntries, {
       hasBorder: true,
@@ -91,78 +91,98 @@ export class Cli implements ICli {
     }
   }
 
+  private async readEntryType(): Promise<EntryType> {
+    try {
+      const availableTypes: EntryType[] = ['start', 'end', 'overtime']
+      return (await terminal.singleLineMenu(availableTypes).promise).selectedText as EntryType
+    } catch (error) {
+      logger.error(error)
+      return null
+    }
+  }
+
+  private async readEntryTime(): Promise<number> {
+    try {
+      terminal('Please enter the time (e.g. 1300): ')
+      let entryTimeString = await terminal.inputField({}).promise
+      if (entryTimeString.length === 3) {
+        entryTimeString = `0${entryTimeString}`
+      }
+      return parseInt(entryTimeString, 10)
+    } catch (error) {
+      logger.error(error)
+      return null
+    }
+  }
+
+  private async readEntryDate(): Promise<Date> {
+    try {
+      terminal('Please enter the day: ')
+      const days = ['Today', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+      const entryDay = await (await terminal.singleLineMenu(days).promise).selectedText
+
+      let entryDate = new Date()
+      switch (entryDay) {
+        case 'Monday':
+          const prevMonday = new Date()
+          prevMonday.setDate(prevMonday.getDate() - ((prevMonday.getDay() + 6) % 7))
+          entryDate = prevMonday
+          break
+        case 'Tuesday':
+          const prevTuesday = new Date()
+          prevTuesday.setDate(prevTuesday.getDate() - ((prevTuesday.getDay() + 5) % 7))
+          entryDate = prevTuesday
+          break
+        case 'Wednesday':
+          const prevWednesday = new Date()
+          prevWednesday.setDate(prevWednesday.getDate() - ((prevWednesday.getDay() + 4) % 7))
+          entryDate = prevWednesday
+          break
+        case 'Thursday':
+          const prevThursday = new Date()
+          prevThursday.setDate(prevThursday.getDate() - ((prevThursday.getDay() + 3) % 7))
+          entryDate = prevThursday
+          break
+        case 'Friday':
+          const prevFriday = new Date()
+          prevFriday.setDate(prevFriday.getDate() - ((prevFriday.getDay() + 2) % 7))
+          entryDate = prevFriday
+          break
+        case 'Saturday':
+          const prevSaturday = new Date()
+          prevSaturday.setDate(prevSaturday.getDate() - ((prevSaturday.getDay() + 1) % 7))
+          entryDate = prevSaturday
+          break
+        case 'Sunday':
+          const prevSunday = new Date()
+          prevSunday.setDate(prevSunday.getDate() - (prevSunday.getDay() % 7))
+          entryDate = prevSunday
+          break
+
+        default:
+          break
+      }
+      return entryDate
+    } catch (error) {
+      logger.error(error)
+      return null
+    }
+  }
+
   async readNewEntry(): Promise<IEntry> {
     terminal('Please enter the new entry: ')
 
-    // get type
-    const availableTypes: EntryType[] = ['start', 'end', 'overtime']
-    const entryType = (await terminal.singleLineMenu(availableTypes).promise).selectedText as EntryType
-
-    terminal('Please enter the time (e.g. 1300): ')
-    let entryTime = await terminal.inputField({}).promise
-    if (entryTime.length === 3) {
-      entryTime = `0${entryTime}`
-    }
-
-    terminal('Please enter the day: ')
-
-    const days = ['Today', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    const entryDay = await (await terminal.singleLineMenu(days).promise).selectedText
-
-    let entryDate = new Date()
-    switch (entryDay) {
-      case 'Monday':
-        const prevMonday = new Date()
-        prevMonday.setDate(prevMonday.getDate() - ((prevMonday.getDay() + 6) % 7))
-        entryDate = prevMonday
-        break
-      case 'Tuesday':
-        const prevTuesday = new Date()
-        prevTuesday.setDate(prevTuesday.getDate() - ((prevTuesday.getDay() + 5) % 7))
-        entryDate = prevTuesday
-        break
-      case 'Wednesday':
-        const prevWednesday = new Date()
-        prevWednesday.setDate(prevWednesday.getDate() - ((prevWednesday.getDay() + 4) % 7))
-        entryDate = prevWednesday
-        break
-      case 'Thursday':
-        const prevThursday = new Date()
-        prevThursday.setDate(prevThursday.getDate() - ((prevThursday.getDay() + 3) % 7))
-        entryDate = prevThursday
-        break
-      case 'Friday':
-        const prevFriday = new Date()
-        prevFriday.setDate(prevFriday.getDate() - ((prevFriday.getDay() + 2) % 7))
-        entryDate = prevFriday
-        break
-      case 'Saturday':
-        const prevSaturday = new Date()
-        prevSaturday.setDate(prevSaturday.getDate() - ((prevSaturday.getDay() + 1) % 7))
-        entryDate = prevSaturday
-        break
-      case 'Sunday':
-        const prevSunday = new Date()
-        prevSunday.setDate(prevSunday.getDate() - (prevSunday.getDay() % 7))
-        entryDate = prevSunday
-        break
-
-      default:
-        break
-    }
-    try {
-      const entryHours = parseInt(entryTime.substring(0, 2), 10)
-      const entryMinutes = parseInt(entryTime.substring(2, 4), 10)
-      entryDate.setHours(entryHours, entryMinutes, 0, 0)
-    } catch (error) {
-      logger.error(error)
-    }
-
     const id = randomUUID()
+
+    const entryType = await this.readEntryType()
+
+    const entryTime = await this.readEntryTime()
+
+    const entryDate = await this.readEntryDate()
 
     return {
       id,
-      date: entryDate.toISOString(),
+      date: entryDate,
       entryTime,
       entryType
     }

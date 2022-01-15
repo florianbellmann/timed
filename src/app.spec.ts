@@ -1,3 +1,9 @@
+  displayLastEntries(): void
+  main(): Promise<void>
+  performAction(currentCommand: string): Promise<void>
+  quit(): void
+  reloadLastEntries(): void
+  waitForUserAction(): Promise<string>
 // import { IApp } from './app'
 // import { container } from './dependency-injection/container'
 // import { TYPES } from './dependency-injection/types'

@@ -53,7 +53,7 @@ export class FileDBService implements IDBService {
   }
 
   // eslint-disable-next-line id-length
-  readLastEntries(n?: number): string[] {
+  getEntries(n?: number): string[] {
     const count = n || 10
     const fileContents = this.readFromDB()
     try {
@@ -62,5 +62,10 @@ export class FileDBService implements IDBService {
       logger.error(error)
       return fileContents
     }
+  }
+
+  getEntriesByUTCDate(utcDateString: string): string[] {
+    const dbEntries = this.readFromDB()
+    return dbEntries.filter((dbEntry) => dbEntry.includes(utcDateString))
   }
 }

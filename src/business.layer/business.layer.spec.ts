@@ -1,3 +1,6 @@
+  insertNewEntryFromInput(entry: IEntry): void
+  insertNewEntryFromTime(time: number): void
+  getEntries(count?: number): IEntry[]
 // import { container } from '../dependency-injection/container'
 // import { TYPES } from '../dependency-injection/types'
 // import { IBusinessLayer } from './entry.parser'

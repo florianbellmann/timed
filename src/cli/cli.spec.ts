@@ -1,12 +1,19 @@
-// import { cli } from './cli'
+import { container } from '../dependency-injection/container'
+import { TYPES } from '../dependency-injection/types'
+import { ICli } from './cli'
 
-// test('CLI should exist', () => {
-//   expect(cli).toBeDefined()
+const SUT = container.get<ICli>(TYPES.ICli)
 
-//   expect(cli.readEntry).toBeDefined()
-//   expect(cli.addToOvertime).toBeDefined()
-//   expect(cli.substractFromOvertime).toBeDefined()
-//   expect(cli.resetOvertime).toBeDefined()
-//   expect(cli.getOvertime).toBeDefined()
-//   expect(cli.getLast50Entries).toBeDefined()
-// })
+// cant test much here because of UI specific stuff
+test('CLI should exist and implement methods', () => {
+  expect(SUT).toBeDefined()
+
+  expect(SUT.displayLastEntries).toBeDefined()
+  expect(SUT.displayAccumulatedOvertime).toBeDefined()
+  expect(SUT.displayUnknownCommand).toBeDefined()
+
+  expect(SUT.readCommand).toBeDefined()
+  expect(SUT.readAppendTime).toBeDefined()
+  expect(SUT.readSubtractTime).toBeDefined()
+  expect(SUT.readNewEntry).toBeDefined()
+})

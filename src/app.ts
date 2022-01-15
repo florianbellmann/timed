@@ -1,12 +1,16 @@
 import { inject, injectable } from 'inversify'
 import { Cli } from './cli/cli'
-import { IDBService } from './db/db.service'
 import { TYPES } from './dependency-injection/types'
-import { IEntry } from './business.layer/entry'
 import { BusinessLayer, IBusinessLayer } from './business.layer/business.layer'
+import { IEntry } from './entry.manager/entry'
 
 export interface IApp {
+  displayLastEntries(): void
   main(): Promise<void>
+  performAction(currentCommand: string): Promise<void>
+  quit(): void
+  reloadLastEntries(): void
+  waitForUserAction(): Promise<string>
 }
 
 @injectable()
@@ -17,7 +21,7 @@ export class App implements IApp {
   private _parsedEntries: IEntry[] = []
   private _accumulatedOvertime: string
 
-  constructor(@inject(TYPES.IDBService) dbService: IDBService, @inject(TYPES.ICli) cli: Cli, @inject(TYPES.IBusinessLayer) businessLayer: BusinessLayer) {
+  constructor(@inject(TYPES.ICli) cli: Cli, @inject(TYPES.IBusinessLayer) businessLayer: BusinessLayer) {
     this._cli = cli
     this._businessLayer = businessLayer
 
@@ -25,7 +29,7 @@ export class App implements IApp {
   }
 
   reloadLastEntries(): void {
-    this._parsedEntries = this._businessLayer.getDbEntries()
+    this._parsedEntries = this._businessLayer.getEntries()
   }
 
   displayLastEntries(): void {
