@@ -25,8 +25,8 @@ export class EntryManager implements IEntryManager {
   }
 
   appendEntry(entry: IEntry) {
-    const { id, date, entryTime, entryType, overTime } = entry
-    this._dbService.appendEntry(`${id};${date.toUTCString()};${entryTime};${entryTime},${entryType};${overTime};`)
+    const { id, date, entryTime, entryType, overTime, workedTime } = entry
+    this._dbService.appendEntry(`${id};${date.toUTCString()};${entryTime};${workedTime};${entryType};${overTime};`)
   }
 
   // TODO: remove this method if not used
@@ -64,14 +64,15 @@ export class EntryManager implements IEntryManager {
     if (dbEntry == null || dbEntry === '' || dbEntry.length === 0) return null
 
     const parts = dbEntry.split(';')
+
     try {
       return {
         id: parts[0],
         date: new Date(parts[1]),
-        entryType: parts[4] as EntryType,
-        workedTime: parseInt(parts[3]),
         entryTime: parseInt(parts[2], 10),
-        overTime: parseInt(parts[5])
+        workedTime: parseInt(parts[3]),
+        entryType: parts[4] as EntryType,
+        overTime: parseInt(parts[5]) || 0
       }
     } catch (error) {
       logger.error(`Could not parse entry: ${dbEntry}`, error)
@@ -89,6 +90,7 @@ export class EntryManager implements IEntryManager {
       })
   }
 
+  // TODO: this method is not yet tested
   calculateWorkForEndDate(endDate: Date): number {
     const last10Entries = this.getEntries(10)
     let workedTime = 0
@@ -100,6 +102,10 @@ export class EntryManager implements IEntryManager {
           const lastHours = parseInt(`${lastEntry.entryTime}`.substring(0, 2))
           const lastMinutes = parseInt(`${lastEntry.entryTime}`.substring(3, 5))
           const normalizedLastDate = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate(), lastHours, lastMinutes)
+          console.log(endDate, normalizedLastDate)
+          console.log(endDate.getDate(), normalizedLastDate.getDate())
+          console.log(endDate.getMonth() - normalizedLastDate.getMonth())
+          console.log(endDate.getFullYear() - normalizedLastDate.getFullYear())
           if (
             lastEntry.entryType === 'start' &&
             normalizedLastDate.getDate() === endDate.getDate() &&
@@ -108,6 +114,7 @@ export class EntryManager implements IEntryManager {
           ) {
             workedTime = (endDate.getTime() - normalizedLastDate.getTime()) / (1000 * 60 * 60)
             workedTime = workedTime * 60
+            console.log(`workedTime`, workedTime)
             break
           }
         } catch (error) {
@@ -120,17 +127,38 @@ export class EntryManager implements IEntryManager {
 
   isFirstEntryOfToday(): boolean {
     const last10Entries = this.getEntries(10)
-    if (last10Entries.length > 0) {
-      const lastEntry = last10Entries[0]
+    if (last10Entries.length === 0) return true
+
+    const today = new Date()
+
+    for (const lastEntry of last10Entries) {
+      if (lastEntry == null) continue
+
       const lastDate = lastEntry.date
-      const today = new Date()
       if (lastDate.getFullYear() === today.getFullYear() && lastDate.getMonth() === today.getMonth() && lastDate.getDate() === today.getDate()) return false
     }
     return true
   }
 
-  getEntriesByDate(date: Date): IEntry[] {
-    const dbEntriesByDate = this._dbService.getEntriesByUTCDate(date.toUTCString())
-    return dbEntriesByDate.map((dbEntry) => this.parseDBEntry(dbEntry))
+  getEntriesByDate(searchDate: Date): IEntry[] {
+    const entriesByDate = []
+
+    const last10Entries = this.getEntries(10)
+    if (last10Entries.length === 0) return []
+
+    for (const lastEntry of last10Entries) {
+      if (lastEntry == null) continue
+
+      try {
+        const lastDate = lastEntry.date
+        if (lastDate.getFullYear() === searchDate.getFullYear() && lastDate.getMonth() === searchDate.getMonth() && lastDate.getDate() === searchDate.getDate())
+          entriesByDate.push(lastEntry)
+      } catch (error) {
+        logger.error(error)
+        continue
+      }
+    }
+
+    return entriesByDate
   }
 }

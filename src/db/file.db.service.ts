@@ -18,7 +18,7 @@ export class FileDBService implements IDBService {
     try {
       return fs.readFileSync(this.filePath, 'utf8').split('\n')
     } catch (error) {
-      logger.error(error)
+      if (process.env.NODE_ENV !== 'test') logger.error(error)
       return []
     }
   }
@@ -57,15 +57,10 @@ export class FileDBService implements IDBService {
     const count = n || 10
     const fileContents = this.readFromDB()
     try {
-      return fileContents.slice(-count)
+      return fileContents.slice(-(count - 1))
     } catch (error) {
       logger.error(error)
       return fileContents
     }
-  }
-
-  getEntriesByUTCDate(utcDateString: string): string[] {
-    const dbEntries = this.readFromDB()
-    return dbEntries.filter((dbEntry) => dbEntry.includes(utcDateString))
   }
 }

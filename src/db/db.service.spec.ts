@@ -15,7 +15,7 @@ function resetTestDB() {
     fs.unlinkSync(testDB)
   } catch (error) {
     // suppress errors for test
-    // logger.error(error)
+    // console.error(error)
   }
 }
 
@@ -43,7 +43,6 @@ test('DBService should exist and implement methods', () => {
 
   expect(SUT.appendEntry).toBeDefined()
   expect(SUT.getEntries).toBeDefined()
-  expect(SUT.getEntriesByUTCDate).toBeDefined()
   expect(SUT.getLastEntry).toBeDefined()
   expect(SUT.setDBPath).toBeDefined()
 })
@@ -107,21 +106,6 @@ test('Should return last entry', () => {
   SUT.appendEntry(testEntry)
 
   expect(SUT.getLastEntry()).toBe(testEntry)
-})
-
-test('Should return entries by UTC date', () => {
-  const testEntries = [
-    `76e29ed2-2877-40de-8b4f-4d12ede131e1;${new Date(Date.now()).toUTCString()};1200;3;end;0;`,
-    `76e29ed2-2877-40de-8b4f-4d12ede131e2;Wed, 12 Jan 2022 12:00:00 GMT;1200;3;start;0;`,
-    `76e29ed2-2877-40de-8b4f-4d12ede131e3;${new Date(Date.now()).toUTCString()};1200;3;overtime;0;`,
-    `76e29ed2-2877-40de-8b4f-4d12ede131e4;Wed, 12 Jan 2022 12:00:00 GMT;1200;3;end;0;`
-  ]
-
-  const entriesByDate = SUT.getEntriesByUTCDate(new Date(Date.now()).toUTCString())
-
-  expect(entriesByDate.length).toBe(2)
-  expect(entriesByDate[0]).toBe(testEntries[0])
-  expect(entriesByDate[1]).toBe(testEntries[2])
 })
 
 afterEach(() => {

@@ -26,16 +26,18 @@ export class Cli implements ICli {
   }
 
   displayLastEntries(entries: IEntry[]): void {
-    const displayEntries = entries
+    let displayEntries = entries
       .filter((entry) => entry != null)
       .map((entry) => [
-        this._entryManager.calculateWorkForEndDate(entry.date),
+        entry.date.toLocaleDateString('de'),
         entry.entryTime,
+        entry.entryType,
         this._entryManager.parseOvertime(entry.workedTime),
         this._entryManager.parseOvertime(entry.overTime),
-        entry.entryType,
+        // this._entryManager.calculateWorkForEndDate(entry.date),
         entry.id
       ])
+    displayEntries = [['Date', 'Entry Time', 'Entry Type', 'Worked Time', 'Overtime', 'ID'], ...displayEntries]
 
     // fix for broken terminal-kit types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,7 +47,6 @@ export class Cli implements ICli {
       borderChars: 'lightRounded',
       borderAttr: { color: 'blue' },
       textAttr: { bgColor: 'default' },
-      width: 60,
       fit: true
     })
   }
@@ -66,7 +67,11 @@ export class Cli implements ICli {
     a: add to overtime \n
     s: subtract from overtime \n
     q: quit \n`)
-    return terminal.inputField({}).promise
+    return terminal.inputField({
+      keyBindings: {
+        ENTER: 'submit'
+      }
+    }).promise
   }
 
   async readAppendTime(): Promise<number> {

@@ -29,6 +29,7 @@ export class BusinessLayer implements IBusinessLayer {
     date.setTime(date.getTime() - date.getTimezoneOffset() * 60 * 1000)
 
     const entryTime = time
+    const workedTime = time
     const entryType: EntryType = 'overtime'
 
     const overTime = this._entryManager.getLastOvertime() + time
@@ -37,6 +38,7 @@ export class BusinessLayer implements IBusinessLayer {
       id,
       date,
       entryTime,
+      workedTime,
       entryType,
       overTime
     })
@@ -53,6 +55,7 @@ export class BusinessLayer implements IBusinessLayer {
     if (entryType === 'end') {
       workedTime = this._entryManager.calculateWorkForEndDate(newEntryDate)
     }
+    console.log(`workedTime`, workedTime)
 
     // calc overtime
     let newOverTime: number = overTime
@@ -62,6 +65,7 @@ export class BusinessLayer implements IBusinessLayer {
       const lastDateEntries = this._entryManager.getEntriesByDate(lastDate)
 
       workedTime = lastDateEntries.map((dbEntry) => dbEntry.workedTime).reduce((itemA, itemB) => itemA + itemB, 0)
+      console.log(`workedTime after full day calc`, workedTime)
       const HOURS_PER_DAY = 8 * 60
       newOverTime = this._entryManager.getLastOvertime() + workedTime - HOURS_PER_DAY
     }
