@@ -98,15 +98,19 @@ export class EntryManager implements IEntryManager {
     const last10Entries = this.getEntries(10)
     let workedTime = 0
 
+    const startsToday = []
     if (last10Entries.length > 0) {
       for (let i = 0; i < last10Entries.length; i++) {
         try {
           const lastEntry = last10Entries[i]
+          if (lastEntry == null) continue
+
           const lastDate = new Date(lastEntry.date)
           const fullLastTimeString = `${lastEntry.entryTime}`.length === 3 ? `0${lastEntry.entryTime}` : `${lastEntry.entryTime}`
           const lastHours = parseInt(`${fullLastTimeString}`.substring(0, 2))
           const lastMinutes = parseInt(`${fullLastTimeString}`.substring(2, 4))
           if (
+            endDate != null &&
             lastEntry.entryType === 'start' &&
             lastDate.getDate() === endDate.getDate() &&
             lastDate.getMonth() === endDate.getMonth() &&
@@ -116,18 +120,28 @@ export class EntryManager implements IEntryManager {
             lastMinutes != null &&
             !isNaN(lastMinutes)
           ) {
-            const timeDiff = endEntryTime - lastEntry.entryTime
-
-            const diffHours = lastMinutes > endMinutes ? endHours - lastHours - 1 : endHours - lastHours
-            const diffMinutes = lastMinutes > endMinutes ? 60 - lastMinutes + endMinutes : endMinutes - lastMinutes
-            workedTime = 60 * diffHours + diffMinutes
-            break
+            startsToday.push(lastEntry)
           }
         } catch (error) {
           logger.error(error)
         }
       }
     }
+
+    if (startsToday.length > 0) {
+      const entryToLookAt = startsToday.sort((entryA, entryB) => {
+        if (entryA == null || entryB == null) return 0
+        return entryA.entryTime < entryB.entryTime ? 1 : -1
+      })[0]
+
+      const fullLastTimeString = `${entryToLookAt.entryTime}`.length === 3 ? `0${entryToLookAt.entryTime}` : `${entryToLookAt.entryTime}`
+      const lastHours = parseInt(`${fullLastTimeString}`.substring(0, 2))
+      const lastMinutes = parseInt(`${fullLastTimeString}`.substring(2, 4))
+      const diffHours = lastMinutes > endMinutes ? endHours - lastHours - 1 : endHours - lastHours
+      const diffMinutes = lastMinutes > endMinutes ? 60 - lastMinutes + endMinutes : endMinutes - lastMinutes
+      workedTime = 60 * diffHours + diffMinutes
+    }
+
     return workedTime
   }
 
