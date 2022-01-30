@@ -35,7 +35,8 @@
     "start": "node dist/index.js",
     "lint": "eslint -c ./.eslintrc.json src",
     "prepare": "husky install",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "test:watch": "jest --runInBand --watch"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -43,7 +44,6 @@
       "json",
       "ts"
     ],
-    "runInBand": true,
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {

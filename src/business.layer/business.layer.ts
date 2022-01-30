@@ -28,7 +28,7 @@ export class BusinessLayer implements IBusinessLayer {
     // fix timezone
     date.setTime(date.getTime() - date.getTimezoneOffset() * 60 * 1000)
 
-    const entryTime = time
+    const entryTime = -1
     const workedTime = time
     const entryType: EntryType = 'overtime'
 
@@ -53,25 +53,17 @@ export class BusinessLayer implements IBusinessLayer {
 
     let workedTime = 0
     if (entryType === 'end') {
-      workedTime = this._entryManager.calculateWorkForEndDate(newEntryDate)
+      workedTime = this._entryManager.calculateWorkForEndDate(newEntryDate, entryTime)
     }
-    console.log(`workedTime`, workedTime)
 
     // calc overtime
     let newOverTime: number = overTime
-    const firstEntryToday = this._entryManager.isFirstEntryOfToday()
-    if (firstEntryToday) {
-      const lastDate = this._entryManager.getLastEntry().date
-      const lastDateEntries = this._entryManager.getEntriesByDate(lastDate)
-
-      workedTime = lastDateEntries.map((dbEntry) => dbEntry.workedTime).reduce((itemA, itemB) => itemA + itemB, 0)
-      console.log(`workedTime after full day calc`, workedTime)
-      const HOURS_PER_DAY = 8 * 60
-      newOverTime = this._entryManager.getLastOvertime() + workedTime - HOURS_PER_DAY
-    }
 
     if (overTime == null) {
       newOverTime = this._entryManager.getLastOvertime()
+    }
+    if (entryType === 'overtime') {
+      newOverTime = newOverTime + entryTime
     }
 
     if (isNaN(newOverTime)) {

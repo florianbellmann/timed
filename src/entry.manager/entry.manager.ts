@@ -6,7 +6,7 @@ import { IEntry, EntryType } from './entry'
 
 export interface IEntryManager {
   appendEntry: (entry: IEntry) => void
-  calculateWorkForEndDate(endDate: Date): number
+  calculateWorkForEndDate(endDate: Date, endEntryTime: number): number
   getEntries(count?: number): IEntry[]
   getEntriesByDate(date: Date): IEntry[]
   getLastEntry(): IEntry
@@ -90,31 +90,40 @@ export class EntryManager implements IEntryManager {
       })
   }
 
-  // TODO: this method is not yet tested
-  calculateWorkForEndDate(endDate: Date): number {
+  calculateWorkForEndDate(endDate: Date, endEntryTime: number): number {
+    const fullEndTimeString = `${endEntryTime}`.length === 3 ? `0${endEntryTime}` : `${endEntryTime}`
+    const endHours = parseInt(`${fullEndTimeString}`.substring(0, 2))
+    const endMinutes = parseInt(`${fullEndTimeString}`.substring(2, 4))
+
     const last10Entries = this.getEntries(10)
     let workedTime = 0
+
     if (last10Entries.length > 0) {
       for (let i = last10Entries.length - 1; i >= 0; i--) {
         try {
           const lastEntry = last10Entries[i]
-          const lastDate = lastEntry.date
-          const lastHours = parseInt(`${lastEntry.entryTime}`.substring(0, 2))
-          const lastMinutes = parseInt(`${lastEntry.entryTime}`.substring(3, 5))
-          const normalizedLastDate = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate(), lastHours, lastMinutes)
-          console.log(endDate, normalizedLastDate)
-          console.log(endDate.getDate(), normalizedLastDate.getDate())
-          console.log(endDate.getMonth() - normalizedLastDate.getMonth())
-          console.log(endDate.getFullYear() - normalizedLastDate.getFullYear())
+          const lastDate = new Date(lastEntry.date)
+          const fullLastTimeString = `${lastEntry.entryTime}`.length === 3 ? `0${lastEntry.entryTime}` : `${lastEntry.entryTime}`
+          const lastHours = parseInt(`${fullLastTimeString}`.substring(0, 2))
+          const lastMinutes = parseInt(`${fullLastTimeString}`.substring(2, 4))
           if (
             lastEntry.entryType === 'start' &&
-            normalizedLastDate.getDate() === endDate.getDate() &&
-            normalizedLastDate.getMonth() === endDate.getMonth() &&
-            normalizedLastDate.getFullYear() === endDate.getFullYear()
+            lastDate.getDate() === endDate.getDate() &&
+            lastDate.getMonth() === endDate.getMonth() &&
+            lastDate.getFullYear() === endDate.getFullYear() &&
+            lastHours != null &&
+            !isNaN(lastHours) &&
+            lastMinutes != null &&
+            !isNaN(lastMinutes)
           ) {
-            workedTime = (endDate.getTime() - normalizedLastDate.getTime()) / (1000 * 60 * 60)
-            workedTime = workedTime * 60
-            console.log(`workedTime`, workedTime)
+            const timeDiff = endEntryTime - lastEntry.entryTime
+
+            console.log(timeDiff, fullEndTimeString, endHours, endMinutes, fullLastTimeString, lastHours, lastMinutes)
+            const diffHours = lastMinutes > endMinutes ? endHours - lastHours - 1 : endHours - lastHours
+            console.log('startminutes:', lastMinutes, 'endM', endMinutes)
+            const diffMinutes = lastMinutes > endMinutes ? 60 - lastMinutes + endMinutes : endMinutes - lastMinutes
+            console.log(diffHours, diffMinutes)
+            workedTime = 60 * diffHours + diffMinutes
             break
           }
         } catch (error) {

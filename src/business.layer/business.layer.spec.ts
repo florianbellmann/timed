@@ -39,7 +39,7 @@ function generateTestEntries(count: number): IEntry[] {
     const possibleEntryTypes = ['start', 'end', 'overtime']
     const entryType: EntryType = possibleEntryTypes[Math.floor(Math.random() * 2)] as EntryType
 
-    const overTime = Math.floor(Math.random() * 120)
+    const overTime = 0
 
     testEntries.push({
       id,
@@ -53,6 +53,16 @@ function generateTestEntries(count: number): IEntry[] {
   return testEntries
 }
 
+function prepRandomDB() {
+  resetTestDB()
+  const testEntries = generateTestEntries(9)
+
+  // write test entries to db
+  testEntries.forEach((entry) => {
+    entryManager.appendEntry(entry)
+  })
+}
+
 test('BusinessLayer should exist and implement methods', () => {
   expect(SUT).toBeDefined()
 
@@ -61,20 +71,284 @@ test('BusinessLayer should exist and implement methods', () => {
   expect(SUT.insertNewEntryFromTime).toBeDefined()
 })
 
-// TODO: implement
-// test('Should insert new entry from input', () => {
-//   resetTestDB()
+test('Should insert start entry from input', () => {
+  //arrange
+  prepRandomDB()
+  const oldLength = SUT.getEntries().length
+  const lastEntry = SUT.getEntries()[SUT.getEntries().length - 1]
 
-//   const oldLength = SUT.getEntries().length
-//   const testEntry = generateTestEntries(1)[0]
+  const generatedEntry = generateTestEntries(1)[0]
+  const testStartEntry: IEntry = {
+    id: generatedEntry.id,
+    date: generatedEntry.date,
+    entryTime: generatedEntry.entryTime,
+    entryType: 'start'
+  }
 
-//   SUT.insertNewEntryFromInput(testEntry)
+  // act
+  SUT.insertNewEntryFromInput(testStartEntry)
 
-//   const entries = SUT.getEntries()
-//   const newLength = entries.length
-//   expect(entries.length).toBe(oldLength + 1)
-//   expect(entries).toContainEqual(testEntry)
-// })
+  // assert
+  const entries = SUT.getEntries()
+  const entryInDb = entries.find((entry) => entry.id === testStartEntry.id)
+  expect(entryInDb).toBeDefined()
+  expect(entryInDb.overTime).toBe(lastEntry.overTime)
+  expect(entryInDb.workedTime).toBe(0)
+  expect(entries.length).toBe(oldLength + 1)
+})
+
+test('Should insert overtime entry from input', () => {
+  //arrange
+  prepRandomDB()
+  const oldLength = SUT.getEntries().length
+  const lastEntry = SUT.getEntries()[SUT.getEntries().length - 1]
+
+  const generatedEntry = generateTestEntries(1)[0]
+  const testOvertimeEntry: IEntry = {
+    id: generatedEntry.id,
+    date: generatedEntry.date,
+    entryTime: generatedEntry.entryTime,
+    entryType: 'overtime'
+  }
+
+  // act
+  SUT.insertNewEntryFromInput(testOvertimeEntry)
+
+  // assert
+  const entries = SUT.getEntries()
+  const entryInDb = entries.find((entry) => entry.id === testOvertimeEntry.id)
+  expect(entryInDb).toBeDefined()
+  expect(entryInDb.workedTime).toBe(0)
+  expect(entryInDb.entryTime).toBe(testOvertimeEntry.entryTime)
+  expect(entryInDb.overTime).toBe(testOvertimeEntry.entryTime + lastEntry.overTime)
+  expect(entries.length).toBe(oldLength + 1)
+})
+
+test('Should insert end entry from input', () => {
+  //arrange
+  prepRandomDB()
+  const oldLength = SUT.getEntries().length
+  const lastEntry = SUT.getEntries()[SUT.getEntries().length - 1]
+
+  const generatedEntry1 = generateTestEntries(1)[0]
+  const testStartEntry: IEntry = {
+    id: generatedEntry1.id,
+    date: generatedEntry1.date,
+    entryTime: 700,
+    entryType: 'start'
+  }
+  const generatedEntry = generateTestEntries(1)[0]
+  const testEndEntry: IEntry = {
+    id: generatedEntry.id,
+    date: generatedEntry.date,
+    entryTime: 1330,
+    entryType: 'end'
+  }
+  const randomEntry = generateTestEntries(1)[0]
+  randomEntry.entryType = 'overtime'
+
+  // act
+  SUT.insertNewEntryFromInput(testStartEntry)
+  entryManager.appendEntry(randomEntry)
+  SUT.insertNewEntryFromInput(testEndEntry)
+
+  // assert
+  const entries = SUT.getEntries()
+  const entryInDb = entries.find((entry) => entry.id === testEndEntry.id)
+  expect(entryInDb).toBeDefined()
+  expect(entryInDb.overTime).toBe(lastEntry.overTime)
+  expect(entryInDb.workedTime).toBe(390)
+  expect(entries.length).toBe(oldLength + 3)
+})
+
+test('Should insert start entry from input for past day', () => {
+  //arrange
+  prepRandomDB()
+  const oldLength = SUT.getEntries().length
+  const lastEntry = SUT.getEntries()[SUT.getEntries().length - 1]
+
+  const pastDate = new Date(Date.now())
+  pastDate.setDate(pastDate.getDate() - 2)
+  pastDate.setTime(pastDate.getTime() - pastDate.getTimezoneOffset() * 60 * 1000)
+  pastDate.setMilliseconds(0)
+  pastDate.setMilliseconds(0)
+  pastDate.setSeconds(0)
+  pastDate.setMinutes(0, 0, 0)
+
+  const generatedEntry = generateTestEntries(1)[0]
+  const testStartEntry: IEntry = {
+    id: generatedEntry.id,
+    date: pastDate,
+    entryTime: generatedEntry.entryTime,
+    entryType: 'start'
+  }
+
+  // act
+  SUT.insertNewEntryFromInput(testStartEntry)
+
+  // assert
+  const entries = SUT.getEntries()
+  const entryInDb = entries.find((entry) => entry.id === testStartEntry.id)
+  expect(entryInDb).toBeDefined()
+  expect(entryInDb.overTime).toBe(lastEntry.overTime)
+  expect(entryInDb.workedTime).toBe(0)
+  expect(entries.length).toBe(oldLength + 1)
+})
+
+test('Should insert end entry from input for past day', () => {
+  //arrange
+  prepRandomDB()
+  const oldLength = SUT.getEntries().length
+  const lastEntry = SUT.getEntries()[SUT.getEntries().length - 1]
+
+  const pastDate = new Date(Date.now())
+  pastDate.setDate(pastDate.getDate() - 2)
+  pastDate.setTime(pastDate.getTime() - pastDate.getTimezoneOffset() * 60 * 1000)
+  pastDate.setMilliseconds(0)
+  pastDate.setMilliseconds(0)
+  pastDate.setSeconds(0)
+  pastDate.setMinutes(0, 0, 0)
+
+  const generatedEntry1 = generateTestEntries(1)[0]
+  const testStartEntry: IEntry = {
+    id: generatedEntry1.id,
+    date: pastDate,
+    entryTime: 745,
+    entryType: 'start'
+  }
+  const generatedEntry = generateTestEntries(1)[0]
+  const testEndEntry: IEntry = {
+    id: generatedEntry.id,
+    date: pastDate,
+    entryTime: 1205,
+    entryType: 'end'
+  }
+  const randomEntry = generateTestEntries(1)[0]
+  randomEntry.entryType = 'overtime'
+
+  // act
+  SUT.insertNewEntryFromInput(testStartEntry)
+  entryManager.appendEntry(randomEntry)
+  SUT.insertNewEntryFromInput(testEndEntry)
+
+  // assert
+  const entries = SUT.getEntries()
+  const entryInDb = entries.find((entry) => entry.id === testEndEntry.id)
+  expect(entryInDb).toBeDefined()
+  expect(entryInDb.overTime).toBe(lastEntry.overTime)
+  expect(entryInDb.workedTime).toBe(260)
+  expect(entries.length).toBe(oldLength + 3)
+})
+
+test('Should insert end entry from input for past day without past start entry', () => {
+  //arrange
+  prepRandomDB()
+  const oldLength = SUT.getEntries().length
+  const lastEntry = SUT.getEntries()[SUT.getEntries().length - 1]
+
+  const pastDate = new Date(Date.now())
+  pastDate.setDate(pastDate.getDate() - 2)
+  pastDate.setTime(pastDate.getTime() - pastDate.getTimezoneOffset() * 60 * 1000)
+  pastDate.setMilliseconds(0)
+  pastDate.setMilliseconds(0)
+  pastDate.setSeconds(0)
+  pastDate.setMinutes(0, 0, 0)
+
+  const generatedEntry = generateTestEntries(1)[0]
+  const testEndEntry: IEntry = {
+    id: generatedEntry.id,
+    date: pastDate,
+    entryTime: 1205,
+    entryType: 'end'
+  }
+
+  // act
+  SUT.insertNewEntryFromInput(testEndEntry)
+
+  // assert
+  const entries = SUT.getEntries()
+  const entryInDb = entries.find((entry) => entry.id === testEndEntry.id)
+  expect(entryInDb).toBeDefined()
+  expect(entryInDb.overTime).toBe(lastEntry.overTime)
+  expect(entryInDb.workedTime).toBe(0)
+  expect(entries.length).toBe(oldLength + 1)
+})
+
+test('Should insert second end entry from past day', () => {
+  //arrange
+  prepRandomDB()
+  const oldLength = SUT.getEntries().length
+  const lastEntry = SUT.getEntries()[SUT.getEntries().length - 1]
+
+  const pastDate = new Date(Date.now())
+  pastDate.setDate(pastDate.getDate() - 2)
+  pastDate.setTime(pastDate.getTime() - pastDate.getTimezoneOffset() * 60 * 1000)
+  pastDate.setMilliseconds(0)
+  pastDate.setMilliseconds(0)
+  pastDate.setSeconds(0)
+  pastDate.setMinutes(0, 0, 0)
+
+  const generatedEntry1 = generateTestEntries(1)[0]
+  const testStartEntry1: IEntry = {
+    id: generatedEntry1.id,
+    date: pastDate,
+    entryTime: 750,
+    entryType: 'start'
+  }
+  const generatedEntry2 = generateTestEntries(1)[0]
+  const testEndEntry1: IEntry = {
+    id: generatedEntry2.id,
+    date: pastDate,
+    entryTime: 1215,
+    entryType: 'end'
+  }
+  const generatedEntry3 = generateTestEntries(1)[0]
+  const testStartEntry2: IEntry = {
+    id: generatedEntry3.id,
+    date: pastDate,
+    entryTime: 1315,
+    entryType: 'start'
+  }
+  const generatedEntry4 = generateTestEntries(1)[0]
+  const testEndEntry2: IEntry = {
+    id: generatedEntry4.id,
+    date: pastDate,
+    entryTime: 1840,
+    entryType: 'end'
+  }
+  const randomEntry = generateTestEntries(1)[0]
+  randomEntry.entryType = 'overtime'
+
+  // act
+  SUT.insertNewEntryFromInput(testStartEntry1)
+  SUT.insertNewEntryFromInput(testStartEntry2)
+  SUT.insertNewEntryFromInput(testEndEntry1)
+  entryManager.appendEntry(randomEntry)
+  SUT.insertNewEntryFromInput(testEndEntry2)
+
+  // assert
+  const entries = SUT.getEntries()
+  const startEntryInDb1 = entries.find((entry) => entry.id === testStartEntry1.id)
+  const startEntryInDb2 = entries.find((entry) => entry.id === testStartEntry2.id)
+  const endEntryInDb1 = entries.find((entry) => entry.id === testEndEntry1.id)
+  const endEntryInDb2 = entries.find((entry) => entry.id === testEndEntry2.id)
+  expect(startEntryInDb1).toBeDefined()
+  expect(startEntryInDb2).toBeDefined()
+  expect(endEntryInDb1).toBeDefined()
+  expect(endEntryInDb2).toBeDefined()
+
+  expect(startEntryInDb1.overTime).toBe(lastEntry.overTime)
+  expect(startEntryInDb2.overTime).toBe(lastEntry.overTime)
+  expect(endEntryInDb1.overTime).toBe(lastEntry.overTime)
+  expect(endEntryInDb2.overTime).toBe(lastEntry.overTime)
+
+  expect(startEntryInDb1.workedTime).toBe(0)
+  expect(endEntryInDb1.workedTime).toBe(255)
+  expect(startEntryInDb2.workedTime).toBe(0)
+  expect(endEntryInDb2.workedTime).toBe(325)
+
+  expect(entries.length).toBe(oldLength + 5)
+})
 
 test('Should insert entry from time', () => {
   resetTestDB()
@@ -84,7 +358,7 @@ test('Should insert entry from time', () => {
   const entries = SUT.getEntries()
 
   expect(entries[entries.length - 1].workedTime).toBe(120)
-  expect(entries[entries.length - 1].entryTime).toBe(120)
+  expect(entries[entries.length - 1].entryTime).toBe(0)
   expect(entries[entries.length - 1].entryType).toBe('overtime')
 })
 
@@ -116,10 +390,6 @@ test('Should return all entries', () => {
   expect(entries[8]).toStrictEqual(testEntries[0])
 })
 
-// TODO: different input types
-
-// TODO: Also test wrong order of entries added. EG: you add an end entry and realize you forgot your start one
-//
 // TODO: rename business layer to application service?
 // TODO: rename app to domain service
 
