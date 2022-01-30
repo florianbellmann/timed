@@ -99,7 +99,7 @@ export class EntryManager implements IEntryManager {
     let workedTime = 0
 
     if (last10Entries.length > 0) {
-      for (let i = last10Entries.length - 1; i >= 0; i--) {
+      for (let i = 0; i < last10Entries.length; i++) {
         try {
           const lastEntry = last10Entries[i]
           const lastDate = new Date(lastEntry.date)
@@ -118,11 +118,8 @@ export class EntryManager implements IEntryManager {
           ) {
             const timeDiff = endEntryTime - lastEntry.entryTime
 
-            console.log(timeDiff, fullEndTimeString, endHours, endMinutes, fullLastTimeString, lastHours, lastMinutes)
             const diffHours = lastMinutes > endMinutes ? endHours - lastHours - 1 : endHours - lastHours
-            console.log('startminutes:', lastMinutes, 'endM', endMinutes)
             const diffMinutes = lastMinutes > endMinutes ? 60 - lastMinutes + endMinutes : endMinutes - lastMinutes
-            console.log(diffHours, diffMinutes)
             workedTime = 60 * diffHours + diffMinutes
             break
           }
