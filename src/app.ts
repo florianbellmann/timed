@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify'
-import { Cli } from './cli/cli'
+import { Cli, SingleColumnMenuResponse } from './cli/cli'
 import { TYPES } from './dependency-injection/types'
 import { BusinessLayer, IBusinessLayer } from './business.layer/business.layer'
 import { IEntry } from './entry.manager/entry'
@@ -11,7 +11,7 @@ export interface IApp {
   performAction(currentCommand: string): Promise<void>
   quit(): void
   reloadLastEntries(): void
-  waitForUserAction(): Promise<string>
+  waitForUserAction(): Promise<SingleColumnMenuResponse>
 }
 
 @injectable()
@@ -37,7 +37,7 @@ export class App implements IApp {
     this._cli.displayLastEntries(this._parsedEntries)
   }
 
-  waitForUserAction(): Promise<string> {
+  waitForUserAction(): Promise<SingleColumnMenuResponse> {
     this.displayLastEntries()
     this._cli.displayAccumulatedOvertime(this._accumulatedOvertime)
 
@@ -50,16 +50,21 @@ export class App implements IApp {
         const timeToAppend = await this._cli.readAppendTime()
         this._businessLayer.insertNewEntryFromTime(timeToAppend)
         break
-      case 's':
+      case 'w':
         const timeToSubtract = await this._cli.readSubtractTime()
         this._businessLayer.insertNewEntryFromTime(timeToSubtract * -1)
         break
       case 'r':
         this.reloadLastEntries()
         break
-      case 'n':
-        const newEntry = await this._cli.readNewEntry()
-        this._businessLayer.insertNewEntryFromInput(newEntry)
+      case 's':
+        const newStartEntry = await this._cli.readNewEntry('start')
+        this._businessLayer.insertNewEntryFromInput(newStartEntry)
+        this.reloadLastEntries()
+        break
+      case 'e':
+        const newEndEntry = await this._cli.readNewEntry('end')
+        this._businessLayer.insertNewEntryFromInput(newEndEntry)
         this.reloadLastEntries()
         break
       // case 'R':
@@ -78,7 +83,7 @@ export class App implements IApp {
     let currentCommand = ''
 
     // start command
-    currentCommand = await this.waitForUserAction()
+    currentCommand = await (await this.waitForUserAction()).key
 
     // command app loop
     while (currentCommand !== 'q') {
@@ -86,7 +91,7 @@ export class App implements IApp {
       await this.performAction(currentCommand)
 
       // eslint-disable-next-line no-await-in-loop
-      currentCommand = await this.waitForUserAction()
+      currentCommand = await (await this.waitForUserAction()).key
     }
 
     this.quit()

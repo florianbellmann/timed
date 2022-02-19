@@ -10,7 +10,7 @@
     "dotenv": "^10.0.0",
     "inversify": "^6.0.1",
     "reflect-metadata": "^0.1.13",
-    "terminal-kit": "2.3.0",
+    "terminal-kit": "https://github.com/florianjuesten/terminal-kit.git",
     "winston": "^3.3.3"
   },
   "devDependencies": {

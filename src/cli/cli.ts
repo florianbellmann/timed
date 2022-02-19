@@ -6,6 +6,16 @@ import { IEntry, EntryType } from '../entry.manager/entry'
 import { IEntryManager, EntryManager } from '../entry.manager/entry.manager'
 import { logger } from '../logger'
 
+export interface SingleColumnMenuResponse {
+  selectedIndex: number // the user-selected menu item index
+  selectedText: string // the user-selected menu item text
+  key: string // the user-selected menu item key
+  x: number // the x coordinate of the selected menu item (the first character)
+  y: number // the y coordinate of the selected menu item
+  unexpectedKey: string // when 'exitOnUnexpectedKey' option is set, this contains the key that produced the exit
+  canceled: boolean // when 'cancelable' option is set, this is set to true
+}
+
 export interface ICli {
   // eslint-disable-next-line no-unused-vars
   displayLastEntries(entries: IEntry[]): void
@@ -13,10 +23,10 @@ export interface ICli {
   displayAccumulatedOvertime(time: string): void
   displayUnknownCommand(): void
 
-  readCommand(): Promise<string>
+  readCommand(): Promise<SingleColumnMenuResponse>
   readAppendTime(): Promise<number>
   readSubtractTime(): Promise<number>
-  readNewEntry(): Promise<IEntry>
+  readNewEntry(type?: EntryType): Promise<IEntry>
 }
 
 @injectable()
@@ -196,19 +206,44 @@ export class Cli implements ICli {
     terminal('Unknown command. Please try again.')
   }
 
-  readCommand(): Promise<string> {
+  private startColumnMenu(): Promise<SingleColumnMenuResponse> {
+    return new Promise((resolve, reject) => {
+      terminal.singleColumnMenu(
+        [''],
+        {
+          style: terminal.green,
+          selectedStyle: terminal.dim.blue.bgBlack,
+          leftPadding: ' > '
+        },
+        function <SingleColumnMenuResponse>(error: Error, response: SingleColumnMenuResponse): void {
+          if (error) {
+            reject(error)
+          }
+
+          // terminal.clear()
+          resolve(response as any)
+        }
+      )
+    })
+  }
+
+  readCommand(): Promise<SingleColumnMenuResponse> {
     terminal(`Commands: \n
-    n: new entry \n
     r: refresh \n
-    // R: reset overtime \n
     a: add to overtime \n
-    s: subtract from overtime \n
+    w: subtract from overtime \n
+    e: new end entry \n
+    s: new start entry \n
     q: quit \n`)
-    return terminal.inputField({
-      keyBindings: {
-        ENTER: 'submit'
-      }
-    }).promise
+
+    return this.startColumnMenu()
+
+    // return terminal.inputField({
+    //   keyBindings: {
+    //     ENTER: 'submit',
+    //     e: 'submit'
+    //   }
+    // }).promise
   }
 
   async readAppendTime(): Promise<number> {
@@ -311,12 +346,15 @@ export class Cli implements ICli {
     }
   }
 
-  async readNewEntry(): Promise<IEntry> {
+  async readNewEntry(type?: EntryType): Promise<IEntry> {
     terminal('Please enter the new entry: ')
 
     const id = randomUUID()
 
-    const entryType = await this.readEntryType()
+    let entryType = type
+    if (!entryType) {
+      entryType = await this.readEntryType()
+    }
 
     const entryTime = await this.readEntryTime()
 
