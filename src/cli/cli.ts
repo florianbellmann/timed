@@ -25,6 +25,92 @@ export class Cli implements ICli {
     this._entryManager = entryManager
   }
 
+  private paintBright(text: string) {
+    return `\x1b[1m${text}\x1b[0m`
+  }
+  private paintDim(text: string) {
+    return `\x1b[2m${text}\x1b[0m`
+  }
+  private paintUnderscore(text: string) {
+    return `\x1b[4m${text}\x1b[0m`
+  }
+  private paintBlink(text: string) {
+    return `\x1b[5m${text}\x1b[0m`
+  }
+  private paintReverse(text: string) {
+    return `\x1b[7m${text}\x1b[0m`
+  }
+  private paintHidden(text: string) {
+    return `\x1b[8m${text}\x1b[0m`
+  }
+  private paintFgBlack(text: string) {
+    return `\x1b[30m${text}\x1b[0m`
+  }
+  private paintFgRed(text: string) {
+    return `\x1b[31m${text}\x1b[0m`
+  }
+  private paintFgGreen(text: string) {
+    return `\x1b[32m${text}\x1b[0m`
+  }
+  private paintFgYellow(text: string) {
+    return `\x1b[33m${text}\x1b[0m`
+  }
+  private paintFgBlue(text: string) {
+    return `\x1b[34m${text}\x1b[0m`
+  }
+  private paintFgMagenta(text: string) {
+    return `\x1b[35m${text}\x1b[0m`
+  }
+  private paintFgCyan(text: string) {
+    return `\x1b[36m${text}\x1b[0m`
+  }
+  private paintFgWhite(text: string) {
+    return `\x1b[37m${text}\x1b[0m`
+  }
+  private paintBgBlack(text: string) {
+    return `\x1b[40m${text}\x1b[0m`
+  }
+  private paintBgRed(text: string) {
+    return `\x1b[41m${text}\x1b[0m`
+  }
+  private paintBgGreen(text: string) {
+    return `\x1b[42m${text}\x1b[0m`
+  }
+  private paintBgYellow(text: string) {
+    return `\x1b[43m${text}\x1b[0m`
+  }
+  private paintBgBlue(text: string) {
+    return `\x1b[44m${text}\x1b[0m`
+  }
+  private paintBgMagenta(text: string) {
+    return `\x1b[45m${text}\x1b[0m`
+  }
+  private paintBgCyan(text: string) {
+    return `\x1b[46m${text}\x1b[0m`
+  }
+  private bgWhite(text: string) {
+    return `\x1b[47m${text}\x1b[0m`
+  }
+
+  private adjustStringWidth(str: string, width: number) {
+    const strWidth = str.length
+    if (strWidth > width) {
+      return `${str.substring(0, width - 3)}…`
+    } else if (strWidth < width) {
+      return `${str}${' '.repeat(width - strWidth)}`
+    } else {
+      return str
+    }
+  }
+  private cleanText(str: string): string {
+    if (str === '-1') {
+      return ''
+    }
+    const cleanString = `${str.replace(/\n/g, '').replace(/\r/g, '').replace(/\s+/g, ' ').replace('-1h ', '').trim().substring(0, 100)}`
+    const result = str.length > 100 ? `${cleanString}...` : cleanString
+    return result
+  }
+
   displayLastEntries(entries: IEntry[]): void {
     let displayEntries = entries
       .filter((entry) => entry != null)
@@ -39,16 +125,64 @@ export class Cli implements ICli {
       ])
     displayEntries = [['Date', 'Entry Time', 'Entry Type', 'Worked Time', 'Overtime', 'ID'], ...displayEntries]
 
-    // fix for broken terminal-kit types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(terminal as any).table(displayEntries, {
-      hasBorder: true,
-      contentHasMarkup: true,
-      borderChars: 'lightRounded',
-      borderAttr: { color: 'blue' },
-      textAttr: { bgColor: 'default' },
-      fit: true
+    let dateWidth = 0,
+      timeWidth = 0,
+      typeWidth = 0,
+      workedWidth = 0,
+      overtimeWidth = 0
+
+    displayEntries.forEach((item) => {
+      if (item[0] != null) {
+        const dateText = this.cleanText(item[0].toString())
+        dateWidth = Math.max(dateWidth, dateText.length)
+      }
+      if (item[1] != null) {
+        const timeText = this.cleanText(item[1].toString())
+        timeWidth = Math.max(timeWidth, timeText.length)
+      }
+      if (item[2] != null) {
+        const typeText = this.cleanText(item[2].toString())
+        typeWidth = Math.max(typeWidth, typeText.length)
+      }
+      if (item[3] != null) {
+        const workedText = this.cleanText(item[3].toString())
+        workedWidth = Math.max(workedWidth, workedText.length)
+      }
+      if (item[4] != null) {
+        const overtimeText = this.cleanText(item[4].toString())
+        overtimeWidth = Math.max(overtimeWidth, overtimeText.length)
+      }
     })
+
+    const itemStrings = displayEntries.map((item, index) => {
+      const lastItem = displayEntries[index - 1]
+      let resultString = ''
+
+      if (index !== 0 && lastItem != null && lastItem[0] !== item[0]) {
+        resultString += '\n'
+      }
+
+      resultString += `${this.paintFgRed(this.adjustStringWidth(this.cleanText(item[0].toString()), dateWidth))} ${this.paintFgGreen(
+        this.adjustStringWidth(this.cleanText(item[1].toString()), timeWidth)
+      )} ${this.paintFgYellow(this.adjustStringWidth(this.cleanText(item[2].toString()), typeWidth))} ${this.paintFgBlue(
+        this.adjustStringWidth(this.cleanText(item[3].toString()), workedWidth)
+      )} ${this.paintFgMagenta(this.adjustStringWidth(this.cleanText(item[4].toString()), overtimeWidth))}`
+
+      return resultString
+    })
+
+    itemStrings.forEach((itemString) => console.log(itemString))
+
+    // // fix for broken terminal-kit types
+    // // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // ;(terminal as any).table(displayEntries, {
+    //   hasBorder: true,
+    //   contentHasMarkup: true,
+    //   borderChars: 'lightRounded',
+    //   borderAttr: { color: 'blue' },
+    //   textAttr: { bgColor: 'default' },
+    //   fit: true
+    // })
   }
 
   displayAccumulatedOvertime(overTime: string): void {
