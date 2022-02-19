@@ -5,14 +5,20 @@ import { logger } from '../logger'
 import { IEntry, EntryType } from './entry'
 
 export interface IEntryManager {
+  // eslint-disable-next-line no-unused-vars
   appendEntry: (entry: IEntry) => void
+  // eslint-disable-next-line no-unused-vars
   calculateWorkForEndDate(endDate: Date, endEntryTime: number): number
+  // eslint-disable-next-line no-unused-vars
   getEntries(count?: number): IEntry[]
+  // eslint-disable-next-line no-unused-vars
   getEntriesByDate(date: Date): IEntry[]
   getLastEntry(): IEntry
   getLastOvertime(): number
   isFirstEntryOfToday(): boolean
+  // eslint-disable-next-line no-unused-vars
   convertToHumanDate(dateString: string): string
+  // eslint-disable-next-line no-unused-vars
   parseOvertime(overTime: number): string
 }
 

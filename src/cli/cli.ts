@@ -7,7 +7,9 @@ import { IEntryManager, EntryManager } from '../entry.manager/entry.manager'
 import { logger } from '../logger'
 
 export interface ICli {
+  // eslint-disable-next-line no-unused-vars
   displayLastEntries(entries: IEntry[]): void
+  // eslint-disable-next-line no-unused-vars
   displayAccumulatedOvertime(time: string): void
   displayUnknownCommand(): void
 
@@ -171,6 +173,7 @@ export class Cli implements ICli {
       return resultString
     })
 
+    // eslint-disable-next-line no-console
     itemStrings.forEach((itemString) => console.log(itemString))
 
     // // fix for broken terminal-kit types

@@ -5,8 +5,11 @@ import { EntryType, IEntry } from '../entry.manager/entry'
 import { IEntryManager } from '../entry.manager/entry.manager'
 
 export interface IBusinessLayer {
+  // eslint-disable-next-line no-unused-vars
   insertNewEntryFromInput(entry: IEntry): void
+  // eslint-disable-next-line no-unused-vars
   insertNewEntryFromTime(time: number): void
+  // eslint-disable-next-line no-unused-vars
   getEntries(count?: number): IEntry[]
 }
 

@@ -7,6 +7,7 @@ import { IEntry } from './entry.manager/entry'
 export interface IApp {
   displayLastEntries(): void
   main(): Promise<void>
+  // eslint-disable-next-line no-unused-vars
   performAction(currentCommand: string): Promise<void>
   quit(): void
   reloadLastEntries(): void
