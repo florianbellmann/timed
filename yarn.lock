@@ -3462,9 +3462,9 @@ table@^6.0.9:
     string-width "^4.2.3"
     strip-ansi "^6.0.1"
 
-"terminal-kit@https://github.com/florianjuesten/terminal-kit.git":
+"terminal-kit@https://github.com/florianbellmann/terminal-kit.git":
   version "2.2.3"
-  resolved "https://github.com/florianjuesten/terminal-kit.git#46a95dc1e06e22cc5cdd51d926181d75744b1744"
+  resolved "https://github.com/florianbellmann/terminal-kit.git#6c7258b2fb3f7d26a0355ce43e93f06b24f08ab0"
   dependencies:
     "@cronvel/get-pixels" "^3.4.0"
     chroma-js "^2.1.2"

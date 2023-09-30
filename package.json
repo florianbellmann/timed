@@ -2,7 +2,7 @@
   "name": "timed",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "https://github.com/florianjuesten/timed.git",
+  "repository": "https://github.com/florianbellmann/timed.git",
   "author": "Florian Jüsten <flojuesten@gmail.com>",
   "license": "MIT",
   "description": "terminal time tracker",
@@ -10,7 +10,7 @@
     "dotenv": "^10.0.0",
     "inversify": "^6.0.1",
     "reflect-metadata": "^0.1.13",
-    "terminal-kit": "https://github.com/florianjuesten/terminal-kit.git",
+    "terminal-kit": "https://github.com/florianbellmann/terminal-kit.git",
     "winston": "^3.3.3"
   },
   "devDependencies": {
